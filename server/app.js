@@ -5,6 +5,7 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
+const cookie = require('./middleware/cookieParser')
 
 const app = express();
 
@@ -14,20 +15,21 @@ app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(cookie);
+app.use(Auth.createSession)
 
 
-
-app.get('/', 
+app.get('/',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links',
 (req, res, next) => {
   models.Links.getAll()
     .then(links => {
@@ -38,9 +40,11 @@ app.get('/links',
     });
 });
 
-app.post('/links', 
+app.post('/links',
 (req, res, next) => {
   var url = req.body.url;
+  console.log("Is it our URL?", req.body)
+
   if (!models.Links.isValidUrl(url)) {
     // send back a 404 if link is not valid
     return res.sendStatus(404);
@@ -77,6 +81,49 @@ app.post('/links',
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+
+//handle post request for signup
+//post request - req.body object should have a username  and password
+//we need to use these values to create a new user in the db
+//check if the user exists in the db already
+  //use get method - on the Users table
+  //if get retrieves a user
+   //redirect the user to the signup page
+   //else
+    //use models.Users.create
+    //take an obj as its argument that has a username and password
+    //return a promise
+    //so need .then methods
+app.post('/signup', function(req, res, next) {
+  models.Users.get({username: req.body.username})
+  .then((user)=> {
+    if (user){
+      res.redirect('/signup')
+    } else {
+      models.Users.create({username: req.body.username, password: req.body.password})
+      .then((data) => {
+        res.redirect('/')
+      })
+    }
+  })
+  .catch((error) => {
+    res.redirect('/signup');
+  })
+})
+
+
+app.post('/login', function(req, res, next) {
+  models.Users.get({username: req.body.username})
+  .then((user)=> {
+    var passwordMatch = models.Users.compare(req.body.password, user.password, user.salt);
+    if (passwordMatch) {
+      res.redirect('/')
+    } else {
+      res.redirect('/login')
+    }
+  })
+  .catch((error) => res.redirect('/login'));
+})
 
 
 
