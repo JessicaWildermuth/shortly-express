@@ -11,7 +11,7 @@ const parseCookies = (req, res, next) => {
       cookieObj[cookieKey] = cookieValue;
     }
   }
-  req.cookie = cookieObj;
+  req.cookies = cookieObj;
   next();
 };
 

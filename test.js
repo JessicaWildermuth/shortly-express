@@ -1,6 +1,7 @@
 
 const Users = require('./server/models/user')
 const Links = require('./server/models/link')
+const Sessions = require('./server/models/session')
 
 
 // Allowing enough time for DB to get setup
@@ -11,6 +12,18 @@ setTimeout(() => {
   //     console.log("Users: ", users)
   //   })
 
+  Sessions.create()
+    .then(metadata  => {
+      const rowId = metadata.insertId
+
+      console.log(metadata)
+
+      Sessions.get({ id: rowId })
+        .then(actualRowData => {
+          console.log(actualRowData)
+        })
+    })
+
   // Users
   //   .create({
   //     username: "Vivek Nair 3",
@@ -19,11 +32,6 @@ setTimeout(() => {
   //   .then(user => {
   //     console.log("user", user)
   //   })
-
-  Links.getAll()
-    .then(links => {
-      console.log(links)
-    })
 
 
 
